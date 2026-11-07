@@ -2,17 +2,17 @@
 
 Este repositório contém o pipeline completo de geração de dados, treinamento (QLoRA) e avaliação de um **agente de triagem determinístico de incidentes**.
 
-O objetivo é receber logs brutos de infraestrutura, identificar a causa raiz e retornar um JSON estruturado indicando o runbook de mitigação correspondente, contribuindo para a redução do MTTR (*Mean Time to Resolution*).
+O objetivo é receber logs brutos de infraestrutura, identificar a causa raiz e retornar um JSON estruturado indicando o runbook de mitigação correspondente, método de reduzir o MTTR (*Mean Time to Resolution*) de uma gerência proativa.
 
 O projeto foi desenvolvido para executar inteiramente em ambiente local, utilizando uma GPU de consumidor (NVIDIA RTX 4060 com 8 GB de VRAM). Dessa forma, os logs permanecem privados, sem necessidade de envio para APIs externas, e a inferência não gera custos com serviços de terceiros.
 
-> 🤗 **Modelo treinado (v6) e Model Card disponíveis no Hugging Face:**
+> **Modelo treinado (v6) e Model Card disponíveis no Hugging Face:**
 >
 > [Brunovski/gemma4-e2b-incident-triage](https://huggingface.co/Brunovski/gemma4-e2b-incident-triage)
 
-## 📊 Arquitetura do Sistema
+## Arquitetura
 
-O agente local atua como a primeira linha de defesa na triagem de incidentes. Caso apresente uma resposta inválida ou indique um runbook inexistente, uma camada de *guardrails* intercepta a saída e impede que informações incorretas avancem para as próximas etapas.
+O agente local faz a triagem antes de qualquer escalada. Se a resposta for inválida ou apontar uma resposta inválida ou indique um runbook inexistente, uma camada de *guardrails* intercepta a saída e impede que informações incorretas avancem para as próximas etapas.
 
 Para incidentes mais complexos, o sistema também possui um mecanismo de fallback, preparado para encaminhar a análise a um modelo maior ou a um operador humano.
 
@@ -20,7 +20,7 @@ Para incidentes mais complexos, o sistema também possui um mecanismo de fallbac
   <img src="arquitetura.png" alt="Arquitetura do Agente de Triagem" width="90%"/>
 </p>
 
-## ⚙️ Principais Decisões Técnicas
+## Decisões técnicas
 
 - **Dataset sintético e realista (`gerar_dataset.py`):** geração de 4.000 exemplos, cobrindo 34 classes de incidentes distribuídas em 7 subsistemas, incluindo Traefik, Kubernetes e PostgreSQL. O conjunto contempla *hard negatives* (erros 4xx e warnings) e cascatas de falhas, nas quais o modelo precisa identificar a causa primária em vez de classificar apenas o sintoma final.
 
@@ -32,7 +32,7 @@ Para incidentes mais complexos, o sistema também possui um mecanismo de fallbac
 
 - **Avaliação rigorosa:** separação entre conjuntos de treinamento e teste, com avaliação em 300 exemplos sintéticos (incluindo formulações não utilizadas durante o treinamento) e 32 janelas de logs reais coletados em um *chaos lab* baseado em Kubernetes.
 
-## 📂 Estrutura do Repositório
+##  Estrutura do Repositório
 
 ```text
 ├── runbooks/                  # 34 arquivos .md de procedimentos operacionais
@@ -45,7 +45,7 @@ Para incidentes mais complexos, o sistema também possui um mecanismo de fallbac
 └── requirements.txt           # Dependências do projeto
 ```
 
-## 🚀 Como Executar o Projeto
+##  Como Executar o Projeto
 
 ### 1. Instalação do Ambiente
 
@@ -122,7 +122,7 @@ resultado = triagem_fn(log_sujo)
 print(json.dumps(resultado, indent=2, ensure_ascii=False))
 ```
 
-## 📈 Resultados: v5 vs. v6 em Logs Reais
+##  Resultados: v5 vs. v6 em Logs Reais
 
 A versão v6 incorporou classes de incidentes identificadas diretamente no *chaos lab*, incluindo cenários como banco de dados inexistente e problemas de RBAC no Traefik.
 
@@ -135,6 +135,6 @@ A comparação abaixo apresenta a evolução do modelo em relação à versão b
 | Severidade correta | 28% | 34% | **94%** |
 | Alucinação (inventados) | 100% | 44% | **12%** |
 
-## 📜 Licença
+##  Licença
 
 Este projeto utiliza o modelo Gemma 4 e, portanto, está sujeito aos [Termos de Uso do Gemma](https://ai.google.dev/gemma/terms).
